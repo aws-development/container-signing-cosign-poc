@@ -71,4 +71,6 @@ jobs:
         run: cosign sign --tlog-upload=true -y --key awskms:///alias/cosign-kms-key -a "author=RAVI KUMAR" ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.image_sha }}
 
       - name: verify signed image Docker image
-        run: cosign verify --key cosign.pub  ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}:latest
+        run: |
+          cosign verify --key ${{ env.PUBLIC_KEY }}  ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}:latest
+          cosign verify --key cosign.pub  ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}:latest
