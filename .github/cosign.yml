@@ -1,0 +1,68 @@
+name: Docker Signing
+
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ secrets.IMAGE_NAME}}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ROLE: ${{ secrets.AWS_ROLE }}
+  GT_TOKEN: ${{ secrets.GT_TOKEN }}
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: GHCR login
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GT_TOKEN }}
+
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}
+
+      - name: Configure AWS CLI - Role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_ROLE }}
+          role-session-name: GitHub-OIDC
+
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Push image to AWS ECR
+        id: push
+        run: |
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}
+
+
+          IMAGE_SHA=$(aws ecr describe-images --repository-name ${{ env.IMAGE_NAME }} --image-ids imageTag=latest --query 'imageDetails[].imageDigest' --output text)
+
+
+          echo "::set-output name=image_sha::$IMAGE_SHA"
+
+      - name: cosign-installer
+        uses: sigstore/cosign-installer@v3.0.1
+
+      - name: Sign the published Docker image
+        run: cosign sign --tlog-upload=true -y --key awskms:///alias/cosign-kms-key -a "author=RAVI KUMAR" ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.image_sha }}
