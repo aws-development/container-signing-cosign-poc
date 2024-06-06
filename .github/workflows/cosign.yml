@@ -63,7 +63,9 @@ jobs:
           echo "::set-output name=image_sha::$IMAGE_SHA"
 
       - name: cosign-installer
-        uses: sigstore/cosign-installer@v3.0.1
+        uses: sigstore/cosign-installer@v3.5.0
+      - name: cosign-version
+        run: cosign version
 
       - name: Sign the published Docker image
         run: cosign sign --tlog-upload=true -y --key awskms:///alias/cosign-kms-key -a "author=RAVI KUMAR" ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.image_sha }}
