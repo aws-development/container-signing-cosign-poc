@@ -14,6 +14,7 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_ROLE: ${{ secrets.AWS_ROLE }}
   GT_TOKEN: ${{ secrets.GT_TOKEN }}
+  PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
 
 
 jobs:
@@ -68,4 +69,4 @@ jobs:
         run: cosign sign --tlog-upload=true -y --key awskms:///alias/cosign-kms-key -a "author=RAVI KUMAR" ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.image_sha }}
 
       - name: verify signed image Docker image
-        run: cosign verify --key awskms:///alias/cosign-kms-key  ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}:latest
+        run: cosign verify --key ${{ env.PUBLIC_KEY }}  ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}:latest
