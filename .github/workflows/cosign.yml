@@ -57,7 +57,7 @@ jobs:
         id: push
         run: |
           docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}
-          ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}-poc
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}-poc
 
 
           IMAGE_SHA=$(aws ecr describe-images --repository-name ${{ env.IMAGE_NAME }} --image-ids imageTag=latest --query 'imageDetails[].imageDigest' --output text)
