@@ -38,7 +38,9 @@ jobs:
           password: ${{ secrets.GT_TOKEN }}
 
       - name: Build the Docker image
-        run: docker build . --file Dockerfile -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}
+        run: |
+          docker build . --file Dockerfile -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}
+          docker build . --file Dockerfile -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}-poc
 
       - name: Configure AWS CLI - Role
         uses: aws-actions/configure-aws-credentials@v1
@@ -55,6 +57,7 @@ jobs:
         id: push
         run: |
           docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}
+          ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.IMAGE_NAME }}-poc
 
 
           IMAGE_SHA=$(aws ecr describe-images --repository-name ${{ env.IMAGE_NAME }} --image-ids imageTag=latest --query 'imageDetails[].imageDigest' --output text)
